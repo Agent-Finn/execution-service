@@ -7,14 +7,36 @@ from dotenv import load_dotenv
 from sqlalchemy import text
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
+import json
 
 # Load environment variables from .env file if it exists
 load_dotenv()
 
 app = FastAPI()
 
-# Use the direct DATABASE_URL environment variable
-DATABASE_URL = os.getenv('DATABASE_URL')
+# Get and parse postgres credentials
+postgres_credentials_str = os.getenv('POSTGRES_CREDENTIALS')
+if not postgres_credentials_str:
+    raise ValueError("POSTGRES_CREDENTIALS environment variable is required")
+
+try:
+    postgres_credentials = json.loads(postgres_credentials_str)
+    
+    # Determine if we're in production
+    is_production = os.getenv('NODE_ENV') == 'production'
+    
+    if is_production:
+        # Use Cloud SQL connection
+        host = f"/cloudsql/nimble-chess-449208-f3:us-central1:finn-sql"
+    else:
+        # Use local Docker connection
+        host = "host.docker.internal"
+    
+    DATABASE_URL = f"postgresql://{postgres_credentials['username']}:{postgres_credentials['password']}@{host}:5432/{postgres_credentials['database']}"
+except json.JSONDecodeError:
+    raise ValueError("POSTGRES_CREDENTIALS must be a valid JSON string")
+except KeyError:
+    raise ValueError("POSTGRES_CREDENTIALS must contain username, password, and database fields")
 
 print(f"Using connection string: {DATABASE_URL}")
 
