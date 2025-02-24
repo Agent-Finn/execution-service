@@ -8,6 +8,7 @@ from sqlalchemy import text
 from pydantic import BaseModel, EmailStr
 from datetime import datetime
 import json
+from .models import UserCreate, PositionCreate
 
 # Load environment variables from .env file if it exists
 load_dotenv()
@@ -50,19 +51,6 @@ engine = create_engine(
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
-
-class UserCreate(BaseModel):
-    user_id: int
-    email: EmailStr
-    name: str
-
-class PositionCreate(BaseModel):
-    position_id: int
-    portfolio_id: int
-    portfolio_name: str
-    user_id: int
-    stock: str
-    quantity: int
 
 @app.get("/")
 async def root():
