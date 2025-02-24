@@ -8,6 +8,8 @@ services:
     environment:
       - NODE_ENV=development
       - POSTGRES_CREDENTIALS={"username":"postgres","password":"gzPwHD32Dbsnkkx1J2","database":"postgres"}
+      - ALPACA_API_KEY_ID=${ALPACA_API_KEY_ID}
+      - ALPACA_API_SECRET_KEY=${ALPACA_API_SECRET_KEY}
     extra_hosts:
       - "host.docker.internal:host-gateway"
 

@@ -1,3 +1,4 @@
 *.pyc
 *.pyc
 app/routes/__pycache__/portfolio.cpython-311.pyc
+.env
