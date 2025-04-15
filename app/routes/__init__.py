@@ -1,3 +1,3 @@
-from . import users
+from ..service import get_users
 from . import core
-from . import portfolio 
+from ..service import get_allocations_portfolio 

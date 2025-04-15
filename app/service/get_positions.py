@@ -2,13 +2,13 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..models import Position  # Import the Position model
 from ..database import SessionLocal  # Import SessionLocal for sync ORM
-
-def get_positions_by_portfolio(portfolio_id: int):
+from uuid import UUID
+def get_positions_by_portfolio(portfolio_id: UUID):
     """
     Fetch all positions for a given portfolio_id.
     
     Args:
-        portfolio_id (int): The portfolio ID to filter positions.
+        portfolio_id (UUID): The portfolio ID to filter positions.
     
     Returns:
         dict: A list of positions in the format {"positions": [...]}.
@@ -28,11 +28,10 @@ def get_positions_by_portfolio(portfolio_id: int):
             positions_list = [
                 {
                     "position_id": pos.position_id,
-                    "portfolio_id": pos.portfolio_id,
-                    "user_id": pos.user_id,
-                    "symbol": pos.symbol,
+                    "portfolio_id": str(pos.portfolio_id),  # Convert UUID to string for JSON response
+                    "symbol_id": str(pos.symbol_id),  # Convert UUID to string for JSON response
                     "quantity": pos.quantity,
-                    "last_updated": pos.last_updated.isoformat() if pos.last_updated else None
+                    "recorded_at": pos.recorded_at.isoformat() if pos.recorded_at else None
                 }
                 for pos in positions
             ]

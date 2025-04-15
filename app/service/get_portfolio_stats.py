@@ -2,13 +2,14 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from ..models import PortfolioStats  # Import the PortfolioStats model
 from ..database import SessionLocal  # Import SessionLocal for sync ORM
+from uuid import UUID
 
-def get_portfolio_stats_by_portfolio(portfolio_id: int):
+def get_portfolio_stats_by_portfolio(portfolio_id: UUID):
     """
     Fetch all portfolio stats for a given portfolio_id.
     
     Args:
-        portfolio_id (int): The portfolio ID to filter stats.
+        portfolio_id (UUID): The portfolio ID to filter stats.
     
     Returns:
         dict: A list of portfolio stats in the format {"portfolio_stats": [...]}.
@@ -29,8 +30,8 @@ def get_portfolio_stats_by_portfolio(portfolio_id: int):
                 {
                     "stat_id": stat.stat_id,
                     "portfolio_id": stat.portfolio_id,
-                    "portfolio_value": float(stat.portfolio_value) if stat.portfolio_value is not None else None,
-                    "stat_date": stat.stat_date.isoformat() if stat.stat_date else None,
+                    "portfolio_balance": float(stat.portfolio_balance) if stat.portfolio_balance is not None else None,
+                    "recorded_at": stat.recorded_at.isoformat() if stat.recorded_at else None,
                     "alpha": float(stat.alpha) if stat.alpha is not None else None,
                     "beta": float(stat.beta) if stat.beta is not None else None,
                     "max_drawdown": float(stat.max_drawdown) if stat.max_drawdown is not None else None,
