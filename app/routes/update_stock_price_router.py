@@ -34,7 +34,7 @@ async def update_stock_price(symbol: str, date: str = None):
                 )
                 
             current_time = datetime.now()
-            symbol_record.price = price
+            # symbol_record.price = price (removed as price field no longer exists in Symbol model)
             symbol_record.last_updated = current_time
             symbol_record.last_updated_at = current_time
             session.commit()

@@ -1,26 +1,33 @@
 from fastapi import APIRouter, HTTPException
 from typing import Optional
 from ..service.update_portfolio_balance import update_portfolio_balance
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 router = APIRouter(
-    tags=["Partial Trades"]
+    tags=["Portfolio Management"]
 )
 
-class PortfolioBalanceUpdate(BaseModel):
-    portfolio_id: str
-    balance_change: float
+class PortfolioBalanceUpdateRequest(BaseModel):
+    portfolio_id: str = Field(..., description="UUID of the portfolio")
+    year: int = Field(..., description="Year of the month to update (e.g. 2024)")
+    month: int = Field(..., ge=1, le=12, description="Month to update (1-12)")
 
-@router.put("/update-portfolio-balance", response_model=dict)
-def update_balance(update_data: PortfolioBalanceUpdate):
+@router.post("/update-portfolio-balance", response_model=dict)
+def update_balance(update_data: PortfolioBalanceUpdateRequest):
     """
-    Update the portfolio balance for a given portfolio_id.
-
+    Update portfolio balances for all trading days in a given month.
+    
+    For each trading day in the month:
+    - Gets the positions for that month
+    - Looks up prices for each position on that trading day
+    - Calculates the total portfolio value
+    - Saves the portfolio stats with the calculated balance
+    
     Args:
-        update_data (PortfolioBalanceUpdate): Contains portfolio_id and balance_change
+        update_data (PortfolioBalanceUpdateRequest): Contains portfolio_id, year, and month
 
     Returns:
-        dict: A dictionary containing the updated portfolio stats
+        dict: A dictionary containing the results of the update operation
 
     Raises:
         HTTPException: If there's an error processing the request
@@ -28,14 +35,15 @@ def update_balance(update_data: PortfolioBalanceUpdate):
     try:
         result = update_portfolio_balance(
             update_data.portfolio_id,
-            update_data.balance_change
+            update_data.year,
+            update_data.month
         )
-        if result:
+        if result and result.get("status") == "success":
             return result
         else:
             raise HTTPException(
-                status_code=404,
-                detail=f"Portfolio with ID '{update_data.portfolio_id}' not found"
+                status_code=500,
+                detail=f"Error updating portfolio balance: {result.get('message')}"
             )
     except Exception as e:
         raise HTTPException(

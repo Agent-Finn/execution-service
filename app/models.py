@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Numeric, func, PrimaryKeyConstraint
+from sqlalchemy import Column, Integer, String, DateTime, Numeric, func, PrimaryKeyConstraint, Date, ForeignKey, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.dialects.postgresql import UUID
 import uuid
@@ -63,9 +63,9 @@ class Trade(Base):
     trade_type = Column(String, nullable=False)
     order_type = Column(String, nullable=False)
     price = Column(Numeric, nullable=False)
-    quantity = Column(Integer, nullable=False)
+    quantity = Column(Numeric, nullable=False)
     reason = Column(String, nullable=False)
-
+    value = Column(Numeric, nullable=True, server_default=text("price * quantity"))
 
 class Portfolio(Base):
     __tablename__ = "portfolios"
@@ -89,6 +89,30 @@ class Symbol(Base):
     __tablename__ = "symbols"
     symbol_id = Column(UUID(as_uuid=True), primary_key=True, nullable=False)
     symbol = Column(String, nullable=False)
-    price = Column(Numeric, nullable=False)
     last_updated_at = Column(DateTime(timezone=True), nullable=False)
+
+class SymbolPrice(Base):
+    __tablename__ = "symbol_prices"
+    symbol_id = Column(UUID(as_uuid=True), nullable=False)
+    price = Column(Numeric, nullable=False)
+    price_at = Column(Date, nullable=False)
+    
+    # Add composite primary key
+    __table_args__ = (
+        PrimaryKeyConstraint('symbol_id', 'price_at'),
+    )
+
+class Industry(Base):
+    __tablename__ = "industries"
+    
+    industry_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    industry = Column(String, nullable=False)
+    last_updated_at = Column(DateTime(timezone=True), default=func.now())
+
+class SymbolIndustry(Base):
+    __tablename__ = "symbol_industries"
+    
+    symbol_id = Column(UUID(as_uuid=True), ForeignKey("symbols.symbol_id"), primary_key=True)
+    industry_id = Column(UUID(as_uuid=True), ForeignKey("industries.industry_id"), primary_key=True)
+    pct = Column(Numeric, nullable=False)
 

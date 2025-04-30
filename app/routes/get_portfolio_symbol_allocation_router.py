@@ -1,23 +1,43 @@
-from fastapi import APIRouter
-from typing import Dict
+from fastapi import APIRouter, HTTPException, Depends
+from sqlalchemy.orm import Session
 from uuid import UUID
-from ..service.get_portfolio_symbol_allocation import get_portfolio_symbol_allocation
+from typing import List
+from pydantic import BaseModel
+from ..database import SessionLocal
+from ..service.get_portfolio_symbol_allocation import calculate_sector_allocations
 
 router = APIRouter(
-    prefix="/api/v1",
-    tags=["Portfolio Analysis"]
+    prefix="/sector-allocations",
+    tags=["sector_allocations"],
 )
 
-@router.get("/portfolio/{portfolio_id}/symbol-allocation", response_model=Dict)
-async def get_symbol_allocation(portfolio_id: UUID):
+class SectorAllocation(BaseModel):
+    sector_id: str
+    sector_pct: float
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
+
+@router.get("/{batch_id}", response_model=List[SectorAllocation])
+def get_sector_allocations(batch_id: UUID, db: Session = Depends(get_db)):
     """
-    Get the allocation percentages for each symbol in a portfolio based on quantity.
+    Calculate and return sector allocations for a given batch ID.
     
     Args:
-        portfolio_id (UUID): The ID of the portfolio to analyze
-        
+        batch_id (UUID): The ID of the allocation batch.
+        db (Session): The database session, provided via dependency.
+    
     Returns:
-        Dict: A dictionary containing portfolio_id, allocations mapping symbols to percentages,
-              and total quantity
+        List[SectorAllocation]: A list of sector allocations.
+    
+    Raises:
+        HTTPException: If no allocations are found for the batch.
     """
-    return get_portfolio_symbol_allocation(portfolio_id) 
+    result = calculate_sector_allocations(db, batch_id)
+    if not result:
+        raise HTTPException(status_code=404, detail="No allocations found for this batch")
+    return result

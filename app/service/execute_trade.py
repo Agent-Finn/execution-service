@@ -53,7 +53,6 @@ async def execute_trade(
             # Update symbol price
             symbol_record = session.query(Symbol).filter(Symbol.symbol_id == symbol_id).first()
             if symbol_record:
-                symbol_record.price = price
                 symbol_record.last_updated_at = current_time
                 session.commit()
 
